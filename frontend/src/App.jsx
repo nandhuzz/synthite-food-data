@@ -284,15 +284,19 @@ function ItemDataSection({ countries, materials, regulations, declarations }) {
       <input value={form[key]} onChange={f(key)} placeholder={opts.placeholder || ''} type={opts.type || 'text'} />
     </div>
   )
-  const fs = (label, key, options) => (
-    <div className="form-row">
-      <label>{label}</label>
-      <select value={form[key]} onChange={f(key)}>
-        <option value="">— select —</option>
-        {options.map(o => <option key={o.id} value={o.id}>{o.name ?? o.description ?? o.id}</option>)}
-      </select>
-    </div>
-  )
+  const nonEditKeys = ["country", "materialName", "regulationtype"]
+  const fs = (label, key, options) => {
+    const locked = editKey && nonEditKeys.includes(key)
+    return (
+      <div className="form-row">
+        <label>{label}</label>
+        <select value={form[key]} onChange={f(key)} disabled={locked}>
+          <option value="">— select —</option>
+          {options.map(o => <option key={o.id} value={o.id}>{o.name ?? o.description ?? o.id}</option>)}
+        </select>
+      </div>
+    )
+  }
 
   return (
     <div className="item-section">
@@ -357,9 +361,9 @@ function ItemDataSection({ countries, materials, regulations, declarations }) {
             <thead>
               <tr>
                 <th>Item ID</th>
-                <th>Material</th>
-                <th>Regulation</th>
                 <th>Country</th>
+                <th>Material</th>
+                <th>Regulation</th>             
                 <th>Declaration</th>
                 <th>Labelling Req</th>
                 <th>Remarks</th>
@@ -371,9 +375,9 @@ function ItemDataSection({ countries, materials, regulations, declarations }) {
                 <tr key={`${r.itemid}-${r.country}-${r.materialName}-${r.regulationtype}`}
                     className="row" style={{ animationDelay: `${i * 20}ms` }}>
                   <td className="td-id">{r.itemid}</td>
+                  <td><span className="tag tag-cty">{cName(r.country)}</span></td>
                   <td><span className="tag">{mName(r.materialName)}</span></td>
                   <td><span className="tag tag-reg">{rName(r.regulationtype)}</span></td>
-                  <td><span className="tag tag-cty">{cName(r.country)}</span></td>
                   <td><span className="tag tag-dec">{dName(r.declaration)}</span></td>
                   <td className="td-clip">{r.labellingReq || '—'}</td>
                   <td className="td-clip">{r.remarks || '—'}</td>
