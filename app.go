@@ -120,27 +120,27 @@ func (a *App) initSchema() {
 			materialName      INTEGER NOT NULL,
 			regulationtype    INTEGER NOT NULL,
 			country           INTEGER NOT NULL,
-			regulationLink    VARCHAR(300) DEFAULT '',
-			labellingReq      VARCHAR(300) DEFAULT '',
-			packagingReq      VARCHAR(200) DEFAULT '',
-			phytoSanitaryReq  VARCHAR(200) DEFAULT '',
+			regulationLink    TEXT DEFAULT '',
+			labellingReq      TEXT DEFAULT '[]',
+			packagingReq      TEXT DEFAULT '[]'
+			phytoSanitaryReq  TEXT DEFAULT '[]'
 			declaration       INTEGER DEFAULT 0,
-			solvent           VARCHAR(200) DEFAULT '',
-			aflatoxin         VARCHAR(200) DEFAULT '',
-			ochratoxin        VARCHAR(200) DEFAULT '',
-			heavyMetal        VARCHAR(200) DEFAULT '',
-			pesticides        VARCHAR(150) DEFAULT '',
-			pah               VARCHAR(150) DEFAULT '',
-			pcbs              VARCHAR(150) DEFAULT '',
-			remarks           VARCHAR(300) DEFAULT '',
-			website           VARCHAR(500) DEFAULT '',
-			mercury           VARCHAR(200) DEFAULT '',
-			cadmium           VARCHAR(200) DEFAULT '',
-			aflatoxinB1       VARCHAR(200) DEFAULT '',
-			aflatoxinSum      VARCHAR(200) DEFAULT '',
-			ochratoxinA       VARCHAR(200) DEFAULT '',
-			pahLink           VARCHAR(200) DEFAULT '',
-			arsenic           VARCHAR(200) DEFAULT '',
+			solvent           TEXT DEFAULT '[]'
+			aflatoxin         TEXT DEFAULT '[]'
+			ochratoxin        TEXT DEFAULT '[]'
+			heavyMetal        TEXT DEFAULT '[]'
+			pesticides        TEXT DEFAULT '[]',
+			pah               TEXT DEFAULT '[]',
+			pcbs              TEXT DEFAULT '[]',
+			remarks           TEXT DEFAULT '[]',
+			website           TEXT DEFAULT '',
+			mercury           TEXT DEFAULT '[]'
+			cadmium           TEXT DEFAULT '[]'
+			aflatoxinB1       TEXT DEFAULT '[]'
+			aflatoxinSum      TEXT DEFAULT '[]'
+			ochratoxinA       TEXT DEFAULT '[]'
+			pahLink           TEXT DEFAULT '',
+			arsenic           TEXT DEFAULT '[]'
 			UNIQUE(country, materialName, regulationtype)
 		);`,
 	}

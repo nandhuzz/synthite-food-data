@@ -19,6 +19,7 @@
   --radius:    6px;
   --font-ui:    sans-serif;
   --font-mono:  monospace;
+
 }
 
 body {
@@ -29,6 +30,9 @@ body {
   height: 100vh;
   overflow: hidden;
   -webkit-font-smoothing: antialiased;
+  -webkit-user-select: none; /* Safari */
+  -ms-user-select: none;     /* Older IE and Edge */
+  user-select: none;         /* Standard syntax (Chrome, Firefox, Opera) */
 }
 
 /* ── App shell ──────────────────────────────────────────────────── */
@@ -80,6 +84,18 @@ body {
   color: var(--text2);
   white-space: nowrap;
 }
+
+.badge-about {
+  background: var(--bg3);
+  border: 1px solid var(--border);
+  border-radius: 20px;
+  font-family: var(--font-mono);
+  font-size: 8px;
+  padding: 3px 10px;
+  color: greenyellow;
+  white-space: nowrap;
+}
+
 
 /* ── Main ────────────────────────────────────────────────────────── */
 .main { flex: 1; overflow: hidden; display: flex; flex-direction: column; }
@@ -374,7 +390,7 @@ body {
   margin-bottom: 20px;
 }
 .view-field { display: flex; flex-direction: column; gap: 3px; }
-.view-label { font-size: 9px; font-weight: 700; letter-spacing: 0.12em; text-transform: uppercase; color: var(--text2); }
+.view-label { font-size: 10px; font-weight: 700; letter-spacing: 0.12em; text-transform: uppercase; color: var(--text2); }
 
 .view-val-row {
   display: flex;
@@ -520,3 +536,34 @@ body {
   transition: all 0.12s;
 }
 .btn-clear-filter:hover { background: rgba(245,95,116,0.1); color: var(--red); border-color: var(--red); }
+
+/* ── JSON field form inputs ──────────────────────────────────────── */
+.form-row-json .json-field-inputs {
+  display: flex;
+  flex-direction: column;
+  gap: 5px;
+}
+.json-value-input,
+.json-link-input {
+  width: 100%;
+  background: var(--bg3);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  color: var(--text);
+  font-family: var(--font-mono);
+  font-size: 12px;
+  padding: 7px 11px;
+  outline: none;
+  transition: border-color 0.15s;
+}
+.json-value-input:focus { border-color: var(--accent); }
+.json-link-input { border-style: dashed; }
+.json-link-input:focus { border-color: var(--accentb); border-style: solid; }
+.json-link-input::placeholder { color: var(--accentb); opacity: 0.45; }
+
+/* ── View modal — JSON field with stacked value + link row ───────── */
+.view-val-col {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
