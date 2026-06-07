@@ -124,32 +124,83 @@ function LookupPanel({ title, rows, cols, onAdd, onUpdate, onDelete, emptyRow, r
 }
 
 // ── Empty ItemData form ───────────────────────────────────────────
+// Fields that store JSON {value, link} objects
+const JSON_FIELDS = [
+  'labellingReq','packagingReq','phytoSanitaryReq','solvent',
+  'aflatoxin','ochratoxin','heavyMetal','pesticides',
+  'pah','pcbs','mercury','cadmium',
+  'aflatoxinB1','aflatoxinSum','ochratoxinA','arsenic',
+]
+// Plain text fields (stored as raw strings)
+// regulationLink, website, pahLink, remarks, declaration
+
+const emptyJsonField = () => ({ value: '', link: '' })
+
 const emptyItemData = {
   itemid: '', materialName: '', regulationtype: '', country: '',
-  regulationLink: '', labellingReq: '', packagingReq: '', phytoSanitaryReq: '',
-  declaration: '0', solvent: '', aflatoxin: '', ochratoxin: '', heavyMetal: '',
-  pesticides: '', pah: '', pcbs: '', remarks: '', website: '',
-  mercury: '', cadmium: '', aflatoxinB1: '', aflatoxinSum: '',
-  ochratoxinA: '', pahLink: '', arsenic: '',
+  regulationLink: '', website: '', pahLink: '', remarks: '',
+  declaration: '0',
+  // JSON fields
+  labellingReq:    emptyJsonField(),
+  packagingReq:    emptyJsonField(),
+  phytoSanitaryReq:emptyJsonField(),
+  solvent:         emptyJsonField(),
+  aflatoxin:       emptyJsonField(),
+  ochratoxin:      emptyJsonField(),
+  heavyMetal:      emptyJsonField(),
+  pesticides:      emptyJsonField(),
+  pah:             emptyJsonField(),
+  pcbs:            emptyJsonField(),
+  mercury:         emptyJsonField(),
+  cadmium:         emptyJsonField(),
+  aflatoxinB1:     emptyJsonField(),
+  aflatoxinSum:    emptyJsonField(),
+  ochratoxinA:     emptyJsonField(),
+  arsenic:         emptyJsonField(),
 }
 
-const toItemData = (f) => ({
-  ...f,
-  itemid: parseInt(f.itemid) || 0,
-  materialName: parseInt(f.materialName) || 0,
-  regulationtype: parseInt(f.regulationtype) || 0,
-  country: parseInt(f.country) || 0,
-  declaration: parseInt(f.declaration) || 0,
-})
+const toItemData = (f) => {
+  const out = {
+    ...f,
+    itemid: parseInt(f.itemid) || 0,
+    materialName: parseInt(f.materialName) || 0,
+    regulationtype: parseInt(f.regulationtype) || 0,
+    country: parseInt(f.country) || 0,
+    declaration: parseInt(f.declaration) || 0,
+  }
+  // Serialize JSON fields: {value,link} -> JSON string stored in DB
+  for (const key of JSON_FIELDS) {
+    const raw = f[key]
+    if (raw && typeof raw === 'object') {
+      out[key] = (raw.value || raw.link) ? JSON.stringify(raw) : '[]'
+    } else {
+      out[key] = raw || '[]'
+    }
+  }
+  return out
+}
 
-const fromItemData = (d) => ({
-  ...d,
-  itemid: String(d.itemid),
-  materialName: String(d.materialName),
-  regulationtype: String(d.regulationtype),
-  country: String(d.country),
-  declaration: String(d.declaration),
-})
+const fromItemData = (d) => {
+  const out = {
+    ...d,
+    itemid: String(d.itemid),
+    materialName: String(d.materialName),
+    regulationtype: String(d.regulationtype),
+    country: String(d.country),
+    declaration: String(d.declaration),
+  }
+  for (const key of JSON_FIELDS) {
+    const raw = d[key]
+    if (!raw || raw === '[]' || raw === '') {
+      out[key] = { value: '', link: '' }
+    } else if (typeof raw === 'string') {
+      try { out[key] = JSON.parse(raw) } catch { out[key] = { value: raw, link: '' } }
+    } else {
+      out[key] = raw
+    }
+  }
+  return out
+}
 
 // ── ItemData section ──────────────────────────────────────────────
 function ItemDataSection({ countries, materials, regulations, declarations }) {
@@ -240,18 +291,24 @@ function ItemDataSection({ countries, materials, regulations, declarations }) {
   }
 
   const handlePrint = (r) => {
+    // For JSON fields, extract only the .value string for printing
+    const jv = (field) => {
+      if (!field || field === '[]') return ''
+      if (typeof field === 'object') return field.value || ''
+      try { return JSON.parse(field).value || '' } catch { return String(field) }
+    }
     const fields = [
       ['Item ID', r.itemid], ['Country', cName(r.country)],
       ['Material', mName(r.materialName)], ['Regulation', rName(r.regulationtype)],
-      ['Declaration', dName(r.declaration)], ['Labelling Req', r.labellingReq],
-      ['Packaging Req', r.packagingReq], ['PhytoSanitary Req', r.phytoSanitaryReq],
-      ['Solvent', r.solvent], ['Aflatoxin', r.aflatoxin],
-      ['Aflatoxin B1', r.aflatoxinB1], ['Aflatoxin Sum', r.aflatoxinSum],
-      ['Ochratoxin', r.ochratoxin], ['Ochratoxin A', r.ochratoxinA],
-      ['Heavy Metal', r.heavyMetal], ['Pesticides', r.pesticides],
-      ['PAH', r.pah], ['PCBs', r.pcbs],
-      ['Mercury', r.mercury], ['Cadmium', r.cadmium],
-      ['Arsenic', r.arsenic], ['Remarks', r.remarks],
+      ['Declaration', dName(r.declaration)], ['Labelling Req', jv(r.labellingReq)],
+      ['Packaging Req', jv(r.packagingReq)], ['PhytoSanitary Req', jv(r.phytoSanitaryReq)],
+      ['Solvent', jv(r.solvent)], ['Aflatoxin', jv(r.aflatoxin)],
+      ['Aflatoxin B1', jv(r.aflatoxinB1)], ['Aflatoxin Sum', jv(r.aflatoxinSum)],
+      ['Ochratoxin', jv(r.ochratoxin)], ['Ochratoxin A', jv(r.ochratoxinA)],
+      ['Heavy Metal', jv(r.heavyMetal)], ['Pesticides', jv(r.pesticides)],
+      ['PAH', jv(r.pah)], ['PCBs', jv(r.pcbs)],
+      ['Mercury', jv(r.mercury)], ['Cadmium', jv(r.cadmium)],
+      ['Arsenic', jv(r.arsenic)], ['Remarks', r.remarks],
       ['Website', r.website], ['Regulation Link', r.regulationLink],
       ['PAH Link', r.pahLink],
     ]
@@ -277,13 +334,39 @@ function ItemDataSection({ countries, materials, regulations, declarations }) {
   const mName = (id) => materials.find(m => m.id === id)?.name ?? id
   const rName = (id) => regulations.find(r => r.id === id)?.name ?? id
   const dName = (id) => declarations.find(d => d.id === id)?.description ?? id
-  // Shared input helper
+  // Plain text input
   const fi = (label, key, opts = {}) => (
     <div className="form-row">
       <label>{label}</label>
       <input value={form[key]} onChange={f(key)} placeholder={opts.placeholder || ''} type={opts.type || 'text'} />
     </div>
   )
+
+  // JSON field input — renders value + link sub-fields
+  const fj = (label, key) => {
+    const field = form[key] ?? { value: '', link: '' }
+    const setField = (subkey) => (e) =>
+      setForm(p => ({ ...p, [key]: { ...(p[key] ?? {}), [subkey]: e.target.value } }))
+    return (
+      <div className="form-row form-row-json">
+        <label>{label}</label>
+        <div className="json-field-inputs">
+          <input
+            className="json-value-input"
+            value={field.value ?? ''}
+            onChange={setField('value')}
+            placeholder="value"
+          />
+          <input
+            className="json-link-input"
+            value={field.link ?? ''}
+            onChange={setField('link')}
+            placeholder="link"
+          />
+        </div>
+      </div>
+    )
+  }
   const nonEditKeys = ["country", "materialName", "regulationtype"]
   const fs = (label, key, options) => {
     const locked = editKey && nonEditKeys.includes(key)
@@ -379,10 +462,10 @@ function ItemDataSection({ countries, materials, regulations, declarations }) {
                   <td><span className="tag">{mName(r.materialName)}</span></td>
                   <td><span className="tag tag-reg">{rName(r.regulationtype)}</span></td>
                   <td><span className="tag tag-dec">{dName(r.declaration)}</span></td>
-                  <td className="td-clip">{r.labellingReq || '—'}</td>
+                  <td className="td-clip">{(r.labellingReq?.value || (typeof r.labellingReq === 'string' ? r.labellingReq : '')) || '—'}</td>
                   <td className="td-clip">{r.remarks || '—'}</td>
                   <td className="td-actions">
-                    <button className="btn-view" onClick={() => setViewRow(r)}>View</button>
+                    <button className="btn-view" onClick={() => setViewRow(fromItemData(r))}>View</button>
                     <button className="btn-edit" onClick={() => openEdit(r)}>Edit</button>
                     <button className="btn-dup" onClick={() => handleDuplicate(r)} title="Duplicate">⧉</button>
                     <button className="btn-del" onClick={() => setDelTarget(r)}>Del</button>
@@ -422,40 +505,40 @@ function ItemDataSection({ countries, materials, regulations, declarations }) {
                   </div>
                   <div className="form-2col">
                     {fs('Declaration', 'declaration', declarations)}
-                    {fi('Packaging Req', 'packagingReq')}
+                    {fj('Packaging Req', 'packagingReq')}
                   </div>
-                  {fi('Labelling Req', 'labellingReq')}
-                  {fi('PhytoSanitary Req', 'phytoSanitaryReq')}
+                  {fj('Labelling Req', 'labellingReq')}
+                  {fj('PhytoSanitary Req', 'phytoSanitaryReq')}
                   {fi('Remarks', 'remarks')}
                 </>
               )}
               {tab === 'contaminants' && (
                 <>
                   <div className="form-2col">
-                    {fi('Solvent', 'solvent')}
-                    {fi('Heavy Metal', 'heavyMetal')}
+                    {fj('Solvent', 'solvent')}
+                    {fj('Heavy Metal', 'heavyMetal')}
                   </div>
                   <div className="form-2col">
-                    {fi('Aflatoxin', 'aflatoxin')}
-                    {fi('Aflatoxin B1', 'aflatoxinB1')}
+                    {fj('Aflatoxin', 'aflatoxin')}
+                    {fj('Aflatoxin B1', 'aflatoxinB1')}
                   </div>
                   <div className="form-2col">
-                    {fi('Aflatoxin Sum', 'aflatoxinSum')}
-                    {fi('Ochratoxin', 'ochratoxin')}
+                    {fj('Aflatoxin Sum', 'aflatoxinSum')}
+                    {fj('Ochratoxin', 'ochratoxin')}
                   </div>
                   <div className="form-2col">
-                    {fi('Ochratoxin A', 'ochratoxinA')}
-                    {fi('Pesticides', 'pesticides')}
+                    {fj('Ochratoxin A', 'ochratoxinA')}
+                    {fj('Pesticides', 'pesticides')}
                   </div>
                   <div className="form-2col">
-                    {fi('PAH', 'pah')}
-                    {fi('PCBs', 'pcbs')}
+                    {fj('PAH', 'pah')}
+                    {fj('PCBs', 'pcbs')}
                   </div>
                   <div className="form-2col">
-                    {fi('Mercury', 'mercury')}
-                    {fi('Cadmium', 'cadmium')}
+                    {fj('Mercury', 'mercury')}
+                    {fj('Cadmium', 'cadmium')}
                   </div>
-                  {fi('Arsenic', 'arsenic')}
+                  {fj('Arsenic', 'arsenic')}
                 </>
               )}
               {tab === 'links' && (
@@ -487,48 +570,98 @@ function ItemDataSection({ countries, materials, regulations, declarations }) {
               </div>
             </div>
             <div className="view-grid">
+              {/* Plain scalar fields */}
               {[
                 ['Item ID', viewRow.itemid], ['Country', cName(viewRow.country)],
                 ['Material', mName(viewRow.materialName)], ['Regulation', rName(viewRow.regulationtype)],
-                ['Declaration', viewRow.declaration], ['Labelling Req', viewRow.labellingReq],
-                ['Packaging Req', viewRow.packagingReq], ['PhytoSanitary Req', viewRow.phytoSanitaryReq],
-                ['Solvent', viewRow.solvent], ['Aflatoxin', viewRow.aflatoxin],
-                ['Aflatoxin B1', viewRow.aflatoxinB1], ['Aflatoxin Sum', viewRow.aflatoxinSum],
-                ['Ochratoxin', viewRow.ochratoxin], ['Ochratoxin A', viewRow.ochratoxinA],
-                ['Heavy Metal', viewRow.heavyMetal], ['Pesticides', viewRow.pesticides],
-                ['PAH', viewRow.pah], ['PCBs', viewRow.pcbs],
-                ['Mercury', viewRow.mercury], ['Cadmium', viewRow.cadmium],
-                ['Arsenic', viewRow.arsenic], ['Remarks', viewRow.remarks],
-                ['Website', viewRow.website], ['Regulation Link', viewRow.regulationLink],
+                ['Declaration', viewRow.declaration], ['Remarks', viewRow.remarks],
+              ].map(([k, v]) => (
+                <div key={k} className="view-field">
+                  <span className="view-label">{k}</span>
+                  <div className="view-val-row">
+                    <span className="view-val">{v || '—'}</span>
+                    {v ? <button className="btn-copy-field" title="Copy" onClick={() => { navigator.clipboard.writeText(String(v)); showToast(`Copied: ${k}`) }}>⎘</button> : null}
+                  </div>
+                </div>
+              ))}
+
+              {/* Plain URL fields */}
+              {[
+                ['Regulation Link', viewRow.regulationLink],
+                ['Website', viewRow.website],
                 ['PAH Link', viewRow.pahLink],
               ].map(([k, v]) => (
                 <div key={k} className="view-field">
                   <span className="view-label">{k}</span>
                   <div className="view-val-row">
                     {isURL(v) ? (
-                      <button
-                        className="view-link"
-                        onClick={() => BrowserOpenURL(v)}
-                        title={`Open: ${v}`}
-                      >
+                      <button className="view-link" onClick={() => BrowserOpenURL(v)} title={`Open: ${v}`}>
                         🔗 {v}
                       </button>
                     ) : (
                       <span className="view-val">{v || '—'}</span>
                     )}
-                    {v ? (
-                      <button
-                        className="btn-copy-field"
-                        title="Copy value"
-                        onClick={() => {
-                          navigator.clipboard.writeText(String(v))
-                          showToast(`Copied: ${k}`, 'success')
-                        }}
-                      >⎘</button>
-                    ) : null}
+                    {v ? <button className="btn-copy-field" title="Copy" onClick={() => { navigator.clipboard.writeText(v); showToast(`Copied: ${k}`) }}>⎘</button> : null}
                   </div>
                 </div>
               ))}
+
+              {/* JSON {value, link} fields */}
+              {[
+                ['Labelling Req', viewRow.labellingReq],
+                ['Packaging Req', viewRow.packagingReq],
+                ['PhytoSanitary Req', viewRow.phytoSanitaryReq],
+                ['Solvent', viewRow.solvent],
+                ['Aflatoxin', viewRow.aflatoxin],
+                ['Aflatoxin B1', viewRow.aflatoxinB1],
+                ['Aflatoxin Sum', viewRow.aflatoxinSum],
+                ['Ochratoxin', viewRow.ochratoxin],
+                ['Ochratoxin A', viewRow.ochratoxinA],
+                ['Heavy Metal', viewRow.heavyMetal],
+                ['Pesticides', viewRow.pesticides],
+                ['PAH', viewRow.pah],
+                ['PCBs', viewRow.pcbs],
+                ['Mercury', viewRow.mercury],
+                ['Cadmium', viewRow.cadmium],
+                ['Arsenic', viewRow.arsenic],
+              ].map(([k, raw]) => {
+                let parsed = { value: '', link: '' }
+                if (raw && typeof raw === 'object') parsed = raw
+                else if (raw && raw !== '[]') {
+                  try { parsed = JSON.parse(raw) } catch { parsed = { value: raw, link: '' } }
+                }
+                const hasValue = !!parsed.value
+                const hasLink  = !!parsed.link
+                if (!hasValue && !hasLink) return (
+                  <div key={k} className="view-field">
+                    <span className="view-label">{k}</span>
+                    <div className="view-val-row"><span className="view-val">—</span></div>
+                  </div>
+                )
+                return (
+                  <div key={k} className="view-field">
+                    <span className="view-label">{k}</span>
+                    <div className="view-val-col">
+                      {hasValue && (
+                        <div className="view-val-row">
+                          <span className="view-val">{parsed.value}</span>
+                          <button className="btn-copy-field" title="Copy value"
+                            onClick={() => { navigator.clipboard.writeText(parsed.value); showToast(`Copied: ${k} value`) }}>⎘</button>
+                        </div>
+                      )}
+                      {hasLink && (
+                        <div className="view-val-row">
+                          <button className="view-link" onClick={() => BrowserOpenURL(parsed.link)} title={`Open: ${parsed.link}`}>
+                            🔗 {parsed.link}
+                          </button>
+                          <button className="btn-copy-field" title="Copy link"
+                            onClick={() => { navigator.clipboard.writeText(parsed.link); showToast(`Copied: ${k} link`) }}>⎘</button>
+                        </div>
+                      )}
+                    </div>
+                  </div>
+                )
+              })}
             </div>
             <div className="form-actions">
               <button className="btn-save" onClick={() => { setViewRow(null); openEdit(viewRow) }}>Edit This Record</button>
@@ -612,10 +745,11 @@ export default function App() {
           ))}
         </nav>
         <div className="header-badges">
-           <span className="badge">{itemData.length} Items</span>
+          <span className="badge">{itemData.length} Items</span>
           <span className="badge">{countries.length} Countries</span>
           <span className="badge">{materials.length} Materials</span>
           <span className="badge">{regulations.length} Regulations</span>
+          <a href='https://nandhuzz.github.io/synthite-food-data/'  target="_blank"> <span className="badge-about"> About</span> </a>
         </div>
       </header>
 
