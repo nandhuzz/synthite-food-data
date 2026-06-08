@@ -122,25 +122,25 @@ func (a *App) initSchema() {
 			country           INTEGER NOT NULL,
 			regulationLink    TEXT DEFAULT '',
 			labellingReq      TEXT DEFAULT '[]',
-			packagingReq      TEXT DEFAULT '[]'
-			phytoSanitaryReq  TEXT DEFAULT '[]'
+			packagingReq      TEXT DEFAULT '[]',
+			phytoSanitaryReq  TEXT DEFAULT '[]',
 			declaration       INTEGER DEFAULT 0,
-			solvent           TEXT DEFAULT '[]'
-			aflatoxin         TEXT DEFAULT '[]'
-			ochratoxin        TEXT DEFAULT '[]'
-			heavyMetal        TEXT DEFAULT '[]'
+			solvent           TEXT DEFAULT '[]',
+			aflatoxin         TEXT DEFAULT '[]',
+			ochratoxin        TEXT DEFAULT '[]',
+			heavyMetal        TEXT DEFAULT '[]',
 			pesticides        TEXT DEFAULT '[]',
 			pah               TEXT DEFAULT '[]',
 			pcbs              TEXT DEFAULT '[]',
 			remarks           TEXT DEFAULT '[]',
 			website           TEXT DEFAULT '',
-			mercury           TEXT DEFAULT '[]'
-			cadmium           TEXT DEFAULT '[]'
-			aflatoxinB1       TEXT DEFAULT '[]'
-			aflatoxinSum      TEXT DEFAULT '[]'
-			ochratoxinA       TEXT DEFAULT '[]'
+			mercury           TEXT DEFAULT '[]',
+			cadmium           TEXT DEFAULT '[]',
+			aflatoxinB1       TEXT DEFAULT '[]',
+			aflatoxinSum      TEXT DEFAULT '[]',
+			ochratoxinA       TEXT DEFAULT '[]',
 			pahLink           TEXT DEFAULT '',
-			arsenic           TEXT DEFAULT '[]'
+			arsenic           TEXT DEFAULT '[]',
 			UNIQUE(country, materialName, regulationtype)
 		);`,
 	}
